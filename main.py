@@ -1,19 +1,20 @@
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
+import tkinter as tk
+from tkinter import messagebox
 
 # Load dataset
 spam_df = pd.read_csv("spam.csv")
 
-# Creating a new column 'spam' to identify category numerically (spam -> 1, ham -> 0)
+# Create 'spam' column (spam -> 1, ham -> 0)
 spam_df['spam'] = spam_df['Category'].apply(lambda x: 1 if x == 'spam' else 0)
 
-# Splitting into test and train
+# Split data
 x_train, x_test, y_train, y_test = train_test_split(spam_df.Message, spam_df.spam, test_size=0.25, random_state=42)
 
-# Convert text to numerical data using CountVectorizer
+# Vectorize text
 cv = CountVectorizer()
 x_train_count = cv.fit_transform(x_train.values)
 
@@ -21,34 +22,41 @@ x_train_count = cv.fit_transform(x_train.values)
 model = MultinomialNB()
 model.fit(x_train_count, y_train)
 
-# Function to predict if a message is spam or ham
-def predict_spam(message: str):
-    message_count = cv.transform([message])  # Transform input message
-    prediction = model.predict(message_count)[0]  # Return prediction (0 for ham, 1 for spam)
+# Predict function
+def predict_spam(message):
+    message_count = cv.transform([message])
+    prediction = model.predict(message_count)[0]
     return "Spam" if prediction == 1 else "Ham"
 
-# Menu system
-while True:
-    print("\n==== Spam Detection Menu ====")
-    print("1. Test a message")
-    print("2. Test model accuracy")
-    print("3. Exit")
-    
-    choice = input("Enter your choice (1-3): ")
-    
-    if choice == "1":
-        user_message = input("\nEnter the message: ")
-        result = predict_spam(user_message)
-        print(f"\nPrediction: {result}")
-    
-    elif choice == "2":
-        x_test_count = cv.transform(x_test)
-        accuracy = model.score(x_test_count, y_test)
-        print(f"\nModel Accuracy: {accuracy:.2%}")
-    
-    elif choice == "3":
-        print("\nExiting... Goodbye!")
-        break
-    
+# Accuracy function
+def show_accuracy():
+    x_test_count = cv.transform(x_test)
+    accuracy = model.score(x_test_count, y_test)
+    messagebox.showinfo("Model Accuracy", f"Accuracy: {accuracy:.2%}")
+
+# Predict button action
+def on_predict():
+    msg = entry.get("1.0", tk.END).strip()
+    if msg:
+        result = predict_spam(msg)
+        result_label.config(text=f"Prediction: {result}")
     else:
-        print("\nInvalid choice! Please enter 1, 2, or 3.")
+        messagebox.showwarning("Input Error", "Please enter a message.")
+
+# GUI setup
+root = tk.Tk()
+root.title("Spam Detector")
+
+tk.Label(root, text="Enter your message:").pack(pady=5)
+entry = tk.Text(root, height=4, width=50)
+entry.pack()
+
+tk.Button(root, text="Predict", command=on_predict).pack(pady=5)
+result_label = tk.Label(root, text="Prediction: ", font=("Arial", 12, "bold"))
+result_label.pack(pady=5)
+
+tk.Button(root, text="Show Model Accuracy", command=show_accuracy).pack(pady=5)
+
+tk.Button(root, text="Exit", command=root.quit).pack(pady=10)
+
+root.mainloop()
