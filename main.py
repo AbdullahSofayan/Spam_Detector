@@ -12,22 +12,22 @@ spam_df = pd.read_csv("spam.csv")
 spam_df['spam'] = spam_df['Category'].apply(lambda x: 1 if x == 'spam' else 0)
 
 # Split the dataset into training and test sets (75% train, 25% test)
-x_train, x_test, y_train, y_test = train_test_split(spam_df.Message, spam_df.spam, test_size=0.25, random_state=42)
+x_train, x_test, y_train, y_test = train_test_split(spam_df.Message, spam_df.spam, test_size=0.25)
 
 # Initialize CountVectorizer to convert text messages to numeric form
 cv = CountVectorizer()
 
-# Fit the vectorizer on training data and transform it
+# Fit the vectorizer on training data and transform it to matrix 
 x_train_count = cv.fit_transform(x_train.values)
 
 # Initialize and train the Naive Bayes model
 model = MultinomialNB()
-model.fit(x_train_count, y_train)
+model.fit(x_train_count, y_train) #fit: learns the relationship between the words in a message and the likelihood that the message is spam or not.
 
 # Function to predict whether a given message is spam or ham
 def predict_spam(message):
     message_count = cv.transform([message])  # Convert input message to vector
-    prediction = model.predict(message_count)[0]  # Predict using trained model
+    prediction = model.predict(message_count)[0]  # Predict using trained model (return a list so take only the first index)
     return "Spam" if prediction == 1 else "Ham"  # Return readable result
 
 # Function to show the accuracy of the model
